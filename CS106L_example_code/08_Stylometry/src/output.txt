@@ -1,0 +1,3 @@
+Similarity - hamilton <-> unknown:   0.998226
+Similarity - jj <-> unknown:         0.991647
+Similarity - madison <-> unknown:    0.996415
