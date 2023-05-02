@@ -1,3 +1,4 @@
-Similarity - hamilton <-> unknown:   0.998226
-Similarity - jj <-> unknown:         0.991647
-Similarity - madison <-> unknown:    0.996415
+  Similarity - hamilton <-> unknown: 0.998226
+  Similarity - jj <-> unknown: 0.991647
+  Similarity - madison <-> unknown: 0.996415
+The Closet Author is jj

@@ -33,6 +33,19 @@ const vector<string> FEATURE_VEC{"a", "about", "above", "after", "again", "again
                                  ",", "-", ".", "/", ":", ";", "<", "=", ">", "?", "@", "[", "\\", "]", "^", "_",
                                  "`", "{", "|", "}", "~"};
 
+
+struct Similarity {
+    string authorA, authorB;
+    double angle;
+};
+
+std::ostream& operator<<(std::ostream& os, const Similarity& s) {
+    os << std::setw(15) << std::setfill(' ') << "Similarity - " << s.authorA << " <-> " << s.authorB <<": " << s.angle;  
+    //of << "Similarity - hamilton <-> unknown:   " << angle(hamilton_vec, unknown_vec) << endl;
+    return os;
+}
+
+
 // Function prototypes
 string fileToString(ifstream& file);
 vector<int> createCountVec(const string& text);
@@ -63,9 +76,16 @@ int main() {
     ofstream of;
     of.open("./output.txt");
     if (of.is_open()) {
-        of << "Similarity - hamilton <-> unknown:   " << angle(hamilton_vec, unknown_vec) << endl;
-        of << "Similarity - jj <-> unknown:         " << angle(jj_vec, unknown_vec) << endl;
-        of << "Similarity - madison <-> unknown:    " << angle(madison_vec, unknown_vec) << endl;
+        // of << "Similarity - hamilton <-> unknown:   " << angle(hamilton_vec, unknown_vec) << endl;
+        // of << "Similarity - jj <-> unknown:         " << angle(jj_vec, unknown_vec) << endl;
+        // of << "Similarity - madison <-> unknown:    " << angle(madison_vec, unknown_vec) << endl;
+        vector<Similarity> rank {{"hamilton", "unknown", angle(hamilton_vec, unknown_vec)}, {"jj", "unknown", angle(jj_vec, unknown_vec)}, {"madison", "unknown", angle(madison_vec, unknown_vec)}};
+        std::copy(rank.begin(), rank.end(), std::ostream_iterator<Similarity>(of, "\n"));
+        auto closerSimila = [] (Similarity& a, Similarity& b) {
+            return a.angle < b.angle;
+        };
+        std::sort(rank.begin(), rank.end(), closerSimila);
+        of << "The Closet Author is " << rank[0].authorA << endl;
         of.close();
     } else {
         cout << "Failed to open the file" << endl;
