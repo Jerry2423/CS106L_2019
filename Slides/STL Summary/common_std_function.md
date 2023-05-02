@@ -43,3 +43,30 @@ std::copy_if(courses.begin(), courses.end(), std::back_inserter(allMathCourses),
 std::copy(allMathCourses.begin(), allMathCourses.end(), std::ostream_iterator<Course>(std::cout, "\n")); // how is each course object is copied? overload << operator gives a ostream for os << aCourse; copy each os into the cout ostream, the trait/delimiter is '\n'
 
 ```
+
+
+### std::transform
+`OutputIt transform( InputIt first1, InputIt last1,
+                    OutputIt d_first, UnaryOperation unary_op );`
+
+> `std::transform` applies the given function `unary_op` to a range and **stores the result in another range**`d_first`, keeping the original elements order and beginning at d_first.
+
+Examples: 
+- Transform a string to lower case by apply `::tolower` to each `char` where `InputIt` points to.
+
+### std::search
+`ForwardIt1 search( ForwardIt1 first, ForwardIt1 last,
+                   ForwardIt2 s_first, ForwardIt2 s_last );`
+
+> Searches for the first occurrence of the sequence of elements [`s_first`, `s_last`) in the range [`first`, `last`).
+
+Examples:
+- Search a word in a string.
+
+### std::inner_product
+`T inner_product( InputIt1 first1, InputIt1 last1, InputIt2 first2, T init );`
+
+> Computes inner product (i.e. sum of products) or performs ordered map/reduce operation on the range [`first1`, `last1`) and the range beginning at `first2`. Then add the product to `init`.
+ 
+Note:
+Knowing v2.begin() is enough since v1, v2 are the same length and by knowing the begin and end of v1, and begin of v2, we know end of v2 = v2.begin() + (v1.end() - v1.begin())
