@@ -1,0 +1,25 @@
+When the container to which an Iterator points changes shape internally, i.e. when elements are moved from one position to another, and the initial iterator still points to the old invalid location, then it is called Iterator invalidation. One should be careful while using iterators in C++. When we iterate over our container using iterators then it may happen that the iterator gets invalidated. This may be due to change in the shape and size of the container while iterating. 
+
+
+
+vector case:
+3 1 4 1 5 2 6
+        ^
+        index:4
+v.erase(iter);
+3 1 4 1 2 6
+        ^
+        index:4 invalidated iterator sill pointing at the old position.
+*iter: 2
+
+
+link list case:
+3->1->4->1->5->2->6
+            ^
+            memory address:0x16478
+l.erase(iter);
+
+3->1->4->1->2->6  5(removed)
+                  ^
+                  memory address:0x16478 invalidated iterator sill pointing at the old memory address
+*iter:5
