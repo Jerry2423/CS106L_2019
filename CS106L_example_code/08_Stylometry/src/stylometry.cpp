@@ -108,7 +108,7 @@ string fileToString(ifstream& file) {
 vector<int> createCountVec(const string& text) {
     vector<int> ret;
     for (auto k_word : FEATURE_VEC) {
-        ret.push_back(countOccurrences(text, k_word));
+        ret.push_back(countOccurrences<string>(text, k_word));
     }
     return ret;
 }
