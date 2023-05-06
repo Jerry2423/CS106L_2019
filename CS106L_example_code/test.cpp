@@ -1,5 +1,7 @@
+#include <algorithm>
 #include <bitset>
 #include <iostream>
+#include <iterator>
 #include <memory>
 #include <string>
 #include <vector>
@@ -14,6 +16,8 @@ int main() {
     foo(a);
 
     vector<string> v {"hello", "world"};
+    vector<string> v2 {"!"};
+    std::copy(v2.begin(), v2.end(), back_inserter(v));
     cout << v[0] << endl;
     //equivalent line down:
     // cout.operator<<(v.operator[](0)).operator(endl);
