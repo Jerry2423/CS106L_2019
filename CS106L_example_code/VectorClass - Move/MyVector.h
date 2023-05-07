@@ -29,6 +29,7 @@ public:
     using const_reference = const value_type&;
     using size_type = size_t;
     using iterator = value_type*;
+    using const_iterator = const iterator;
 
 
     MyVector();
@@ -64,14 +65,18 @@ public:
     reference operator[](size_type n);
     const_reference operator[](size_type n) const;
     
+    iterator begin();
+    iterator end();
+    const_iterator begin() const;
+    const_iterator end() const;
 
 private:
     size_type _logicalSize;
     size_type _allocateSize;
     iterator _elems;
 
-    friend ostream& operator<<(ostream& os, const MyVector<T>& v);
-    friend MyVector<T> operator+(const MyVector<T>& lhs, const MyVector<T>& rhs);
+    // friend ostream& operator<<(ostream& os, const MyVector<T>& v);
+    // friend MyVector<T> operator+(const MyVector<T>& lhs, const MyVector<T>& rhs);
 };
 
 template<typename T>
@@ -230,10 +235,10 @@ typename MyVector<T>::const_reference MyVector<T>::operator[](size_type n) const
 }
 
 template<typename T>
-ostream& operator<<(ostream& os, const MyVector<T>& v) {
-    os << "{" << v._elems[0];
-    for (auto i = 1; i < v._logicalSize; i++) {
-        os << ", " << v._elems[i];
+ostream& operator<<(ostream& os, const  MyVector<T>& v) {
+    os << "{" << v[0];
+    for (auto i = 1; i < v.size(); i++) {
+        os << ", " << v[i];
     }
     os << "}";
     return os;
@@ -243,17 +248,26 @@ template<typename T>
 MyVector<T> operator+(const MyVector<T>& lhs, const MyVector<T>& rhs) {
     MyVector<T> v = lhs;
     // std::move(lhs._elems, lhs._elems + lhs.size(), v._elems);
-    std::move(rhs._elems, rhs._elems + rhs.size(), v._elems+lhs.size());
+    std::move(rhs.begin(), rhs.end() ,back_inserter(v));
+    // for (auto i : rhs) {
+    //     v.push_back(i);
+    // }
     return v;
 }
 
 template<typename T>
-MyVector<T> operator+(const MyVector<T> &lhs, typename MyVector<T>:: value_type rhs) {
+MyVector<T> operator+(const MyVector<T> &lhs, typename MyVector<T>:: value_type&& rhs) {
     MyVector<T> v = lhs;
     v.push_back(std::move(rhs));
     return v;
 }
 
+template<typename T>
+MyVector<T> operator+(const MyVector<T> &lhs, typename MyVector<T>:: const_reference rhs) {
+    MyVector<T> v = lhs;
+    v.push_back(rhs);
+    return v;
+}
 
 template<typename T>
 MyVector<T>& MyVector<T>::operator+=(value_type&& val) {
@@ -266,6 +280,27 @@ MyVector<T>& MyVector<T>::operator+=(const_reference val) {
     push_back(val);
     return *this;
 }
+
+template<typename T>
+typename MyVector<T>::iterator MyVector<T>::begin() {
+    return _elems;
+}
+
+template<typename T>
+typename MyVector<T>::iterator MyVector<T>::end() {
+    return _elems + _logicalSize;
+}
+
+template<typename T>
+typename MyVector<T>::const_iterator MyVector<T>::begin() const {
+    return _elems;
+}
+
+template<typename T>
+typename MyVector<T>::const_iterator MyVector<T>::end() const {
+    return _elems + _logicalSize;
+}
+
 
 #endif // DEBUG
 

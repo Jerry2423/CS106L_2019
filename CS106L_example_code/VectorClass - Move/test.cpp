@@ -21,12 +21,12 @@ int main() {
     cout << v2 << endl;
     cout << v + v2 << endl; // in the operator +, there is a constructor
     MyVector<double> v3 = std::move(v + 100);
-    // cout << v3 << endl;
-    // cout << v << endl;
+    cout << v3 << endl;
+    cout << v << endl;
     v3 = std::move(v2);
     // v2.push_back(10); after applying std::move on v2, v2 cannot be used. Segmentation error
     v3.push_back(90);
-    // cout << v3 << endl;
+    cout << v3 << endl;
     // cout << v2 << endl;
 
     return 0;
