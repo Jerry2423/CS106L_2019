@@ -6,9 +6,12 @@
 #include <cstddef>
 #include <iostream>
 #include <iterator>
+#include <memory>
 #include <ostream>
 #include <string>
 #include <initializer_list>
+#include <tuple>
+#include <type_traits>
 using namespace std;
 
 /*
@@ -40,9 +43,11 @@ public:
     //addition: rule of three: copy constructor, copy assignment, destructor
     ~MyVector();
     MyVector(const MyVector<T>& other);
-    MyVector<T>& operator=(const MyVector<T>& rhs); //assignment
+    // MyVector<T>& operator=(const MyVector<T>& rhs); //assignment
     MyVector(MyVector<T>&& other);
-    MyVector<T>& operator=(MyVector<T>&& rhs);
+    // MyVector<T>& operator=(MyVector<T>&& rhs);
+    MyVector<T>& operator=(MyVector<T> rhs);
+    void swap(MyVector<T>& rhs);
 
     size_type size() const;
     bool empty() const;
@@ -110,18 +115,18 @@ MyVector<T>::MyVector(const MyVector<T>& other):_logicalSize(other._logicalSize)
     std::copy(other._elems, other._elems+other.size(), _elems);
 }
 
-template<typename T>
-MyVector<T>& MyVector<T>::operator=(const MyVector<T>& rhs) {
-    cout << "coppy assignment" << endl;
-    if (this != &rhs){
-        _logicalSize = rhs._logicalSize;
-        _allocateSize = rhs._allocateSize;
-        delete [] _elems;
-        _elems = new value_type[_allocateSize];
-        std::copy(rhs._elems, rhs._elems + rhs._allocateSize, _elems);
-    }
-    return *this;
-}
+// template<typename T>
+// MyVector<T>& MyVector<T>::operator=(const MyVector<T>& rhs) {
+//     cout << "coppy assignment" << endl;
+//     if (this != &rhs){
+//         _logicalSize = rhs._logicalSize;
+//         _allocateSize = rhs._allocateSize;
+//         delete [] _elems;
+//         _elems = new value_type[_allocateSize];
+//         std::copy(rhs._elems, rhs._elems + rhs._allocateSize, _elems);
+//     }
+//     return *this;
+// }
 
 template<typename T>
 MyVector<T>::MyVector(MyVector<T>&& other): _logicalSize(other.size()), _allocateSize(other._allocateSize), _elems(other._elems) {
@@ -131,18 +136,18 @@ MyVector<T>::MyVector(MyVector<T>&& other): _logicalSize(other.size()), _allocat
     other._logicalSize = 0;
 }
 
-template<typename T>
-MyVector<T>& MyVector<T>::operator=(MyVector<T>&& rhs) {
-    cout << "move assignment" << endl;
-    if (this != &rhs) {
-        delete [] _elems;
-        _logicalSize = std::move(rhs._logicalSize);
-        _allocateSize = std::move(rhs._allocateSize);
-        _elems = rhs._elems;
-        rhs._elems = nullptr;
-    }
-    return *this;
-}
+// template<typename T>
+// MyVector<T>& MyVector<T>::operator=(MyVector<T>&& rhs) {
+//     cout << "move assignment" << endl;
+//     if (this != &rhs) {
+//         delete [] _elems;
+//         _logicalSize = std::move(rhs._logicalSize);
+//         _allocateSize = std::move(rhs._allocateSize);
+//         _elems = rhs._elems;
+//         rhs._elems = nullptr;
+//     }
+//     return *this;
+// }
 
 //size_type is dependent name, in order to use dependent name, we need tp gp to the typename(declare using dependent name) MyVector<T>::size_type
 template<typename T>
@@ -198,11 +203,12 @@ void MyVector<T>::push_back(const_reference val) {
 
 template<typename T>
 typename MyVector<T>::reference MyVector<T>::at(size_type n) {
-    if (n >= _logicalSize) {
-        throw "invalid index";
-    } else {
-        return _elems[n];
-    }
+    // if (n >= _logicalSize) {
+    //     throw "invalid index";
+    // } else {
+    //     return _elems[n];
+    // }
+    return const_cast<reference>(static_cast<const MyVector<T>*>(this)->at(n));
 }
 
 template<typename T>
@@ -217,21 +223,19 @@ typename MyVector<T>::const_reference MyVector<T>::at(size_type n) const {
 template<typename T>
 typename MyVector<T>::reference MyVector<T>::operator[](size_type n) {
 
-    if (n >= _logicalSize) {
-        throw "invalid index";
-    } else {
-        return _elems[n];
-    }
+    // if (n >= _logicalSize) {
+    //     throw "invalid index";
+    // } else {
+    //     return _elems[n];j
+    // }
+    return const_cast<reference>(static_cast<const MyVector<T>>(*this)[n]);
 }
 
 template<typename T>
 typename MyVector<T>::const_reference MyVector<T>::operator[](size_type n) const {
     
-    if (n >= _logicalSize) {
-        throw "invalid index";
-    } else {
-        return _elems[n];
-    }
+    return _elems[n];
+    
 }
 
 template<typename T>
@@ -301,7 +305,18 @@ typename MyVector<T>::const_iterator MyVector<T>::end() const {
     return _elems + _logicalSize;
 }
 
+template<typename T>
+MyVector<T>& MyVector<T>::operator=(MyVector<T> rhs) {
+    swap(rhs);
+    return *this;
+}
 
+template<typename T>
+void MyVector<T>::swap(MyVector<T>& rhs) {
+    std::swap(this->_allocateSize, rhs._allocateSize);
+    std::swap(this->_logicalSize, rhs._logicalSize);
+    std::swap(this->_elems, rhs._elems);
+}
 #endif // DEBUG
 
 
