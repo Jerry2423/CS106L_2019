@@ -17,11 +17,40 @@ Reorders the elements in the range [first, last) in such a way that all elements
 
 `void sort( RandomIt first, RandomIt last, Compare comp );`
 
-## std::remove
+### std::remove and std::erase
+
 **erase-remove idiom**: `container.erase(std::remove(...));`
 
 `ForwardIt remove( ForwardIt first, ForwardIt last, const T& value );`
 `ForwardIt remove_if( ForwardIt first, ForwardIt last, UnaryPredicate p );`
+
+Note the difference between `erase` and `remove`
+
+`remove` do not change the physical size:
+
+> Removing is done by **shifting** (by means of [copy assignment](https://en.cppreference.com/w/cpp/language/copy_assignment) (until C++11)[move assignment](https://en.cppreference.com/w/cpp/language/move_assignment) (since C++11)) the elements in the range in such a way that the <u>elements that are not to be removed appear in the beginning of the range.</u> Relative order of the elements that remain is preserved and the <u>*physical* size of the container is unchanged.</u> Iterators pointing to an element between the <u>new *logical* end and the *physical* end of the range are still [dereferenceable](https://en.cppreference.com/w/cpp/iterator#Dereferenceability_and_validity), but the elements themselves have unspecified values</u> (as per [*MoveAssignable*](https://en.cppreference.com/w/cpp/named_req/MoveAssignable) post-condition) (since C++11).
+
+For container, it's better to use `erase`: [link](https://stackoverflow.com/questions/875103/how-do-i-erase-an-element-from-stdvector-by-index)
+
+```c++
+std::vector<int> vec;
+
+vec.push_back(6);
+vec.push_back(-17);
+vec.push_back(12);
+
+// Deletes the second element (vec[1])
+vec.erase(std::next(vec.begin()));
+
+// Deletes the second through third elements (vec[1], vec[2])
+vec.erase(std::next(vec.begin(), 1), std::next(vec.begin(), 3));
+```
+
+
+
+### std::next and std::advance
+
+`next` return the `n`th successor (or `-n`th predecessor if `n` is negative) of iterator `it`. `advance` increments given iterator it by n elements.
 
 ### std::copy, std::copy_if
 
@@ -67,6 +96,6 @@ Examples:
 `T inner_product( InputIt1 first1, InputIt1 last1, InputIt2 first2, T init );`
 
 > Computes inner product (i.e. sum of products) or performs ordered map/reduce operation on the range [`first1`, `last1`) and the range beginning at `first2`. Then add the product to `init`.
- 
+
 Note:
 Knowing v2.begin() is enough since v1, v2 are the same length and by knowing the begin and end of v1, and begin of v2, we know end of v2 = v2.begin() + (v1.end() - v1.begin())
