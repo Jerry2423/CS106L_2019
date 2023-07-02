@@ -1,3 +1,7 @@
+## STL Functions
+
+
+
 ### std::count, std::count_if
 
 `count( InputIt first, InputIt last, const T& value );`
@@ -99,3 +103,77 @@ Examples:
 
 Note:
 Knowing v2.begin() is enough since v1, v2 are the same length and by knowing the begin and end of v1, and begin of v2, we know end of v2 = v2.begin() + (v1.end() - v1.begin())
+
+
+
+## STL Container
+
+
+
+### std::priority_queue
+
+[Reference](https://en.cppreference.com/w/cpp/container/priority_queue)
+
+```c++
+template<
+    class T, // type
+    class Container = std::vector<T>, // container
+    class Compare = std::less<typename Container::value_type> // rule of comparision
+> class priority_queue;
+```
+
+
+
+Intro: It's a **container adaptor** adapted from vector by default.
+
+> A `priority queue` is a **container adaptor** that provides constant time lookup of the largest (by default) element, at the expense of logarithmic insertion and extraction.
+>
+> A user-provided `Compare` can be supplied to change the ordering, e.g. using [std::greater](http://en.cppreference.com/w/cpp/utility/functional/greater)<T> would cause the smallest element to appear as the [top()](https://en.cppreference.com/w/cpp/container/priority_queue/top).
+>
+> Working with a `priority_queue` is similar to managing a [heap](https://en.cppreference.com/w/cpp/algorithm/make_heap) in some random access container, with the benefit of not being able to accidentally invalidate the heap.
+
+**Template parameters**
+
+|           |      |                                                              |
+| --------- | ---- | ------------------------------------------------------------ |
+| Container | -    | The type of the underlying container to use to store the elements. The container must satisfy the requirements of [*SequenceContainer*](https://en.cppreference.com/w/cpp/named_req/SequenceContainer), and its iterators must satisfy the requirements of [*LegacyRandomAccessIterator*](https://en.cppreference.com/w/cpp/named_req/RandomAccessIterator). Additionally, it must provide the following functions with the usual semantics:front()push_back()pop_back().The standard containers [std::vector](https://en.cppreference.com/w/cpp/container/vector) (including [`std::vector`](https://en.cppreference.com/w/cpp/container/vector_bool)) and [std::deque](https://en.cppreference.com/w/cpp/container/deque) satisfy these requirements. |
+| Compare   | -    | **A [*Compare*](https://en.cppreference.com/w/cpp/named_req/Compare) type** providing a strict weak ordering.Note that the [*Compare*](https://en.cppreference.com/w/cpp/named_req/Compare) parameter is defined such that it returns true if its first argument comes *before* its second argument in a weak ordering. But because the priority queue outputs largest elements first, the elements that "come before" are actually output last. That is, the front of the queue contains the "last" element according to the weak ordering imposed by [*Compare*](https://en.cppreference.com/w/cpp/named_req/Compare). |
+
+
+
+**How do design `Compare` type**
+
+[Reference](https://stackoverflow.com/questions/23997104/priority-queue-with-pointers-and-comparator-c)
+
+1. Overloading `<` and `>` for certain object and combining them with `std::less<T>` and `std::greater<T>` respectively
+
+Note: `<`operator does not support pointer
+
+2. Design a `Compare` type by overloading `()` for the type
+
+Example: when comparing, simply use `CmpEdgePtrs(lhs, rhs)`
+
+```c++
+struct CmpEdgePtrs
+{
+    bool operator()(const Edge* lhs, const Edge* rhs) const
+    {
+        return lhs->getWeight() < rhs->getWeight();
+    }
+};
+```
+
+
+
+**Updating element in PQ**
+
+[How to do an efficient priority update in STL priority_queue?](https://stackoverflow.com/questions/649640/how-to-do-an-efficient-priority-update-in-stl-priority-queue)
+
+> 1. Use the `priority_queue` and **push element each time you would like to update it**. **Accept the fact that you will have useless entries in the queue. When popping the top value, check if it contains the up-to-date value. If not, ignore it and pop the next.**
+>
+>    This way you **delay the removal** of the updated element until it comes to the top. I noticed this approach being used by top programmers realizing Dijkstra algorithm.
+
+Note:
+
+- Simply changing the value of an element that is already in the PQ will **not update its order**.
+
