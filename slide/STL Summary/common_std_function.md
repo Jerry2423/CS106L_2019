@@ -177,3 +177,21 @@ Note:
 
 - Simply changing the value of an element that is already in the PQ will **not update its order**.
 
+
+
+### Slicing a Vector 
+
+Simply use copy constructor of vector by passing in iterator:
+
+`v2 = vector<int>(first_itr, last_itr);`
+
+The `first_itr` is included, while the `last_itr` is excluded.
+
+Referece:
+
+[Slicing a vector in C++](https://stackoverflow.com/questions/50549611/slicing-a-vector-in-c)
+
+[Copy Constructor of Vector](https://en.cppreference.com/w/cpp/container/vector/vector)
+
+
+
