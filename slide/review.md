@@ -1,15 +1,448 @@
-### HW7 Review
+## C++ Review
+
+Based on *C++ Primer* and *CS106L*
 
 
-#### STL Container and Algorithm
-1. Be careful with empty container when adding elements into it! (Iterator Adaptor needed)
-```
-std::vector<int> v;
-std::copy(source.begin(), source.end()), back_iter(v)); // back_iter needed
+
+### Types and Variable
+
+
+
+#### Outline
+
+**types basics** + **variable declaration** + **casting**
+
+![](/Users/bryant/Downloads/IMG_3EEA73F5A178-1.jpeg)
+
+
+
+#### Type Basics
+
+- Unsigned type: **integral** type
+  1. In an unsigned type, **all the bits represent the value.** For example, an 8-bit unsigned char can hold the values from 0 through 255 (i.e. 2^8) inclusive. Note: unsigned type **never overflows** since it **wraps around ** by modulo of the length of the range. For example, an 8-bit unsigned char's value will mod 256 if it overflows.
+  2. **Never mix unsigned type with signed types**.
+  3. Be careful when trying to **subtract** from an unsigned value! For example, infinite for loop bug when subtracting from unsigned index
+- Advice
+
+​	1. Use an unsigned type when you know that the values cannot be negative.
+
+​	2. Avoid undefined AND  implementation-defined behavior.
+
+​	3. Define variables where you FIRST use them.
+
+Implementation-defined behavior:
+
+> Similarly, programs usually should avoid implementation-deﬁned behavior, such as assuming that the size of an int is a ﬁxed and known value. Such programs are said to be nonportable. When the program is moved to another machine, code that relied on implementation-deﬁned behavior may fail. Tracking down these sorts of problems in previously working programs is, mildly put, unpleasant.
+
+
+
+#### Casting: implicit + explicit
+
+- Implicit cast: convert to **wider** type.
+
+  - Arithmetic conversion: promotion -> signedness -> (same: wider); (otherwise: diff sign)
+
+    Diff sign:
+
+    - If unsigned type is **semantically** >= signed type: convert to unsigned type. For example, `int` and `unsigned int` when mixed together, `int` convert to the `unsigned int` since the size of `int` and `unsigned int` are "semantically" equal.
+    - Otherwise: depend on machines: if signed type is **really (i.e. have more bits on the machine)** larger than the signed type, convert unsigned type to signed type; otherwise, convert to unsigned type. 
+
+  - Array to Pointer Conversions
+
+  - Conversions to bool
+
+  - Conversion to const
+
+  - Conversions Deﬁned by Class Types
+
+- Explicit cast: 
+
+  - `static_cast<type>()`: type conversion
+
+  > 1. A static_cast is often useful when a larger arithmetic type is assigned to a smaller type. The cast informs both the reader of the program and the compiler that we are aware of and are not concerned about the potential loss of precision.
+  >
+  > 2. A static_cast is also useful to perform a conversion that the compiler will not generate automatically.
+
+  - `const_cast`: cast away const
+
+  > 1. A const_cast changes only a low-level (§ 2.4.3, p. 63) const in its operand
+  >
+  > 2. Only a const_cast may be used to change the constness of an expression. Trying to change whether an expression is const with any of the other forms of named cast is a compile-time error. Similarly, we cannot use a const_cast to change the type of an expression
+  >
+  > 3. A const_cast is most useful in the context of overloaded functions, which we’ll describe in § 6.4 (p. 232).
+
+  - `reinterpret_cast`: dangerous, don't use!
+
+  > A reinterpret_cast generally performs a low-level reinterpretation of the bit pattern of its operands.
+
+  - `dynamic_cast`: run-time type conversion, used in polymorphism.
+
+    - Error handling
+
+    > If the cast fails and *target-type* is a **pointer type**, it returns a **null pointer** of that type. If the cast fails and *target-type* is a **reference type**, it **throws an exception** that matches a handler of type [std::bad_cast](https://en.cppreference.com/w/cpp/types/bad_cast).
+
+
+
+#### Variable Declaration
+
+- Compound type: 
+
+> It can be easier to understand complicated pointer or reference declarations if you **read them from right to left.**
+
+- Const correctness:
+
+  - Low-level const:ptr to const / ref to const, **only for compound type**! base type const!
+
+  > It may be helpful to think of pointers and references to const as pointers or references that **think** they point or refer to const.” "think": there is no guarantee that the object won't change
+
+  - Top-level const: for any object type itself!
+  - Example:
+  
+  ```c++
+  const int b = 10;// top-level
+  int a = 100;
+  const int &c_ref = a; // low-level
+  a++ // low-level const changes for c_ref!
+  ```
+  
+- `auto`: auto can be seen as base type
+
+  1. First, as we’ve seen, when we use **a reference**, we are **really using the object to which the reference refers.**
+
+  ```c++
+  int a = 10;
+  const int &ref = a;
+  auto b = ref // since ref is an alias of a, ref can be replaced with a; type of b is int
+  ```
+  
+  2. Second, auto ordinarily ignores top-level const
+  
+  ```c++
+  const int a = 10;
+  auto b = a; // top-level const for a is ignored, type of b is int
+  ```
+  
+  3. `auto &`: When we ask for a reference to an auto-deduced type, top-level consts in the initializer are not ignored.
+  
+  ```c++
+  const int a = 10;
+  auto &c_ref = a; //when add & after auto, it considers const correctness, top-level const of a is not ignored, i.e. the type of c_ref is const int &  
+  ```
+  
+  4. Adding `const` before `auto` can be seen as adding top-level const
+  
+- Type alias: synonym of a **base type**!
+
+  - **Wrong idea**: It can be tempting, albeit incorrect, to interpret a declaration that uses a type alias by **conceptually replacing** the alias with its corresponding type.
+
+  ```c++
+  using int_ptr = int *;
+  int a = 10
+  const int_ptr c_ptr = &a; // wrong: simply replacing int_ptr with int *, i.e. const int * c_ptr: c_ptr is a ptr to const(a.k.a ptr_c); correct: const says that the object int_ptr(int *) is a const, namely, a const ptr!
+  *a++;
+  ```
+
+
+
+### Streams
+
+See more information in `stream_summary.pdf`
+
+#### File Streams
+
+file reading: **inheritance** from cin and cout; They are very similar
+When init a fstream `ifstream s("file name")` , **open it automatically**, when destroyed, **close automatically (CADRE)**
+
+Note:
+
+Streams **are not copyable**!
+
+
+
+### STL
+
+**Containers(adaptors) + Iterators(adaptors) + Functors(lambda) + Algorithms** 
+
+
+
+#### Containers
+
+- Sequence containers: vector and deque: choose which container to use:
+
+  - Vector should be used **by default**. However, deque should be chosen if most insertions and deletions happen **at the beginning or at the end**. For example, using deque to build stack and queue is better than vector. 
+  - Container adaptor: stack and queue
+
+  ```c++
+  template<
+      class T,
+      class Container = std::deque<T> // stack is adapted from deque by default
+  > class stack;
+  ```
+
+  > The `std::stack` class is a **container adaptor** that gives the programmer the functionality of a stack - specifically, a LIFO (last-in, first-out) data structure.
+
+```c++
+template<
+    class T,
+    class Container = std::deque<T>
+> class queue;
 ```
 
-2. Be careful when interacting with 2 containers: **length** of them matters!(Pay attention to the assumption an stl function puts on the length of the containers)
+> The `std::queue` class is a **container adaptor** that gives the programmer the functionality of a queue - specifically, a FIFO (first-in, first-out) data structure.
+
+
+
+- Associative containers: 
+
+  - `std::remove`: It doesn't work for associative containers!
+
+  > These algorithms cannot be used with associative containers such as [std::set](https://en.cppreference.com/w/cpp/container/set) and [std::map](https://en.cppreference.com/w/cpp/container/map) **because their iterator types do not dereference to [*MoveAssignable*](https://en.cppreference.com/w/cpp/named_req/MoveAssignable) types** (the keys in these containers are not modifiable).
+
+  C++20 update for deleting element: add `std::erase` and `std::erase_if` for all containers, similar to use `std::remove` followed by calling container's `erase` **member function**
+
+  > A call to `remove` is typically followed by <u>a call to a **container's `erase` member function**,</u> which erases the unspecified values and reduces the *physical* size of the container to match its new *logical* size. These two invocations together constitute a so-called [*Erase–remove* idiom](https://en.wikipedia.org/wiki/Erase-remove_idiom), which can be achieved by the free function [std::erase](https://en.cppreference.com/w/cpp/container/vector/erase2) that has [overloads](https://en.cppreference.com/w/cpp/container#Non-member_function_table) for all standard *sequence* containers, or [std::erase_if](https://en.cppreference.com/w/cpp/container/vector/erase2) that has [overloads](https://en.cppreference.com/w/cpp/container#Non-member_function_table) for *all* standard containers (since C++20).
+
+  - Map iterator: the iterator of map points to `std::pair<key_t, val_t>`
+
+  A useful way to to iterate over a map: binding
+
+  ```c++
+  for (auto [key, val] : map) {}
+  auto [key, val] = map.begin()
+  ```
+
+  - For map, `.at()` and `[]` are different:
+    - `.at()` will check boundary and it's a `const` function
+    - `[]` won't check boundary and it is not `const` function
+
+- Remove element in containers: **erase-remove idiom**
+
+  - Understand `std::remove`:
+
+  > 1. Removes all elements satisfying specific criteria from the range [`first`, `last`) and **returns a past-the-end iterator for the new end of the range.**
+  >
+  > 2. Removing is done by **shifting** the elements in the range in such a way that the elements that are not to be removed appear in the beginning of the range. 
+
+  Summary: `std::remove` **does not shrink** the size of the container, it just **move the undeleted elements forward**, and return the past-the-end iterator of the new range of the undeleted elements.
+
+  - Note: `std::erae(std::remove(v.begin(), v.end(), num), v.end)`*
+
+    *many containers will deﬁne their **own erase** function which does this for you - this only applies if you use the STL erase/remove algorithms
+
+  - Example:
+
+```c++
+vector<int> v {1, 2, 3, 4, 3, 7, 3, 3, 8, 10};
+v.erase(std::remove_if(v.begin(), v.end(), pred), v.end()); // don't forget the v.end() iter, erase the trash range!
 ```
-std::transform(m_coeffs.begin(), m_coeffs.end(), rhs.m_coeffs.begin(), m_coeffs.begin(), std::plus<double>());
+
+#### Iterator
+
+- Types of iterators:
+  - Input iterator: **Read only** iterator
+  - Output iterator: **Write only** iterator
+  - Forward iterator
+  - Bidirectional iterator
+  - Random access iterator
+- Declaration of iterator:
+
+```c++
+std::vector<int>::iterator
 ```
-Assumption: there is no `last2` because the function assumes that the length of the slice starting from `begin2`is greter or equal than the `distance(last1 - begin1)`; However, if `rhs` is shorter than the `m_coeffs`, than there will be undefined behavior 
+
+- Move iterator: A generic way
+
+  - `std::advance(it, dist)`: move the iterator itself
+  - `std::next(it, dist)`: return a moved iterator
+
+- **Invalidated iterators**: be careful when adding and removing element to a container by iterator.
+
+  - Add elements:
+    - `std::vector`: 
+      - `push_back`:If the vector changed capacity, all of them. If not, only [end()](https://en.cppreference.com/w/cpp/container/vector/end).
+      - `insert`: If the vector changed capacity, all of them. If not, only those at or after the insertion point (including [end()](https://en.cppreference.com/w/cpp/container/vector/end)).
+    - `std::deque`: all invalidated
+    - `std::list`: valid
+  - Remove elements:
+    - All iterators of different kinds of containers pointing to the removal point is invalidated
+    - `std::vector`: all iterators **after erasure point invalidated.**
+    - `std::deque`:  all invalidated unless remove from begin or end.
+      - `erase`:
+        - If erasing at begin - only erased elements
+        - If erasing at end - only erased elements and the past-the-end iterator
+          Otherwise - all iterators are invalidated.
+      - `pop_front, pop_back`:To the element erased. The past-the-end iterator is also invalidated
+    - `std::list / map / set`: all **other** iterators are still valid
+  - More information: check out cppreference:
+
+  ![](/Users/bryant/Desktop/Screen Shot 2023-07-17 at 16.19.41.png)
+
+  - **Writing Loops That Change a Container**
+
+    - Remember to **refresh** iterator:
+
+    > Refreshing an iterator is easy if the loop calls `insert` or `erase`. Those operations **return iterators**, which we can use to reset the iterator
+
+    Why some container methods return the new iterator: In order to refresh the invalidated iterator.
+
+    ```c++
+    std::vector<int> v {1, 3, 2, 3, 4};
+    auto it = v.begin()
+    it = v.erase(++it) // assign value to it to refresh the iterator
+    ```
+
+    For example: `std::vector::erase`
+
+    ```c++
+    iterator erase( const_iterator pos );
+    ```
+
+    > Return value
+    >
+    > Iterator following the last removed element.
+    >
+    > 1) If pos refers to the last element, then the [end()](https://en.cppreference.com/w/cpp/container/vector/end) iterator is returned.
+    >
+    > 2) If last == end() prior to removal, then the updated [end()](https://en.cppreference.com/w/cpp/container/vector/end) iterator is returned. If [`first`, `last`) is an empty range, then last is returned.
+
+  - **Avoid Storing the Iterator Returned from end**
+
+  As we can see, the `end()` iterator gets invalidated easily after container operations.
+
+  > <u>When we add or remove elements in a vector or string, or add elements or remove any but the ﬁrst element in a deque, the iterator returned by end is **always** invalidated.</u> Thus, loops that add or remove elements should always **call end rather than use a stored copy**. Partly for this reason, C++ standard libraries are usually implemented so that calling end() is a very fast operation.
+
+  - Advice:
+    - Manage iterators: When you use an iterator (or a reference or pointer to a container element), it is a good idea to **minimize** the part of the program during which an iterator must stay valid.
+    - Don’t cache the iterator returned from end() in loops that insert or delete elements in a deque, string, or vector.
+
+- Stream Iterator
+
+  - `std::istream_iterator<T>`: [Intro](https://en.cppreference.com/w/cpp/iterator/istream_iterator)
+
+    - Read from a string successively
+
+    - > `std::istream_iterator` is a single-pass input iterator that reads successive objects of type `T` from the [std::basic_istream](https://en.cppreference.com/w/cpp/io/basic_istream) object for which it was constructed, by calling the appropriate operator>>. **The actual read operation is performed when the iterator is incremented, not when it is dereferenced.** The first object is read when the iterator is constructed. Dereferencing only returns a copy of the most recently read object.
+      >
+      > Constructor:
+      >
+      > Default constructor: `istream_iterator();`
+      >
+      > Constructs the **end-of-stream** iterator
+      >
+      > `istream_iterator( istream_type& stream );`
+      >
+      > Initializes the iterator, stores the address of `stream` in a data member, and performs the **first read** from the input stream to initialize the cached value data member.
+
+    - Example:
+
+    ```c++
+    istringstream s("1 2 3 4");
+    std::partial_sum(istream_iterator<int>(s), istream_iterator<int>(), ostream_iterator(cout, ",")); // read ints from s like s >> a_int successively and cout successively like cout << num
+    
+    istringstream s1("1 2 3 4 5 6 7 8");
+    auto it = std::find_if(istream_iterator<int>(s1), istream_iterator<int>(), [](auto i) {return i%2}); // read from stream, convert type to int and find the odd number
+    if (it != istream_iterator<int>()) {
+        cout << "the first odd number is " << *it << endl;
+    }
+    ```
+
+  - `std::ostream_iterator`: [Intro](https://en.cppreference.com/w/cpp/iterator/ostream_iterator)
+
+    - Write to a stream successively
+
+    - > `std::ostream_iterator` is a single-pass [*LegacyOutputIterator*](https://en.cppreference.com/w/cpp/named_req/OutputIterator) that writes successive objects of type `T` into the [std::basic_ostream](https://en.cppreference.com/w/cpp/io/basic_ostream) object for which it was constructed, using `operator<<`. Optional delimiter string is written to the output stream after every write operation. The write operation is performed when the iterator (whether dereferenced or not) is assigned to. Incrementing the `std::ostream_iterator` is a no-op.
+
+    - Note: the `delimiter` type is c-string, `std::string` needs to be converted to c-string by calling `.c_str()` method.
+
+    - Example: print a vector:
+
+    ```c++
+    vector<int> v {1, 2, 3, 4};
+    string delimiter = " ";
+    std::copy(v.begin(), v.end(), ostream_iterator(cout, delimiter.c_str()));
+    ```
+
+- Iterator adaptor
+
+  - `std::back_inserter(container)`:
+
+    - Example:
+
+    ```c++
+    std::vector<int> v {1, 2, 3};
+    std::fill_n(std::back_inserter(v), 3, -1); // add three -1s to the back of v
+    ```
+
+
+
+#### Template Functions
+
+- **Concept Lifting**: check out the return value, parameters and *implicit interface* of a function and try to **relax** constraints
+
+  - Data type lifting
+  - Container / Range lifting: use *iterator* to replace the container.
+  - Condition lifting: use *predicate* to replace specific conditions.
+
+- Implicit Interfaces: assumptions
+
+- **Overload Resolution**
+
+  - Step:
+
+  ![image-20230717171303934](/Users/bryant/Library/Application Support/typora-user-images/image-20230717171303934.png)
+
+  1. Look up all functions that matches **name** of function call. If template found, **deduce** the type. (Candidate functions found)
+
+     - How type parameter deduce type? 
+
+     ```c++
+     template<typename T>
+     void foo(T para);
+     foo(arg); // replace T with auto for function para: 
+     // auto para = arg; the type of T is the type of para
+     ```
+
+  2. From all candidate functions, check **the number and types** of the parameters. For template instantiations, try **substituting and see if implicit interface satisfied.** If fails, remove these instantiations. (Found viable functions)
+
+     - **SFINAE**:Substitution Failure Is Not An Error
+
+     When substituting the deduced types fails (in the immediate context) because the type doesn’t satisfy implicit interfaces, this does not result in a compile error.
+
+     ```c++
+     template<typename T>
+     void foo(T para) {
+     	cout << para.size() << endl;
+     }
+     
+     template<typename T>
+     void foo(T para) {
+     	cout << -para << endl;
+     }
+     
+     int a = 10;
+     foo(a)
+     ```
+
+     For the above code, both of the `foo`'s became candidate function and by type deduction(i.e. auto para = a), `T` is `int` (step1); the first `foo` implicit interface is that the `T` must have `.size()` function, substitute `T` with `int`, `int ` does not have `.size()` function (i.e. the substitution fails). This does not lead to error(SFINAE), just remove the first `foo` from the candidate function list can try next version of `foo`.
+
+  3. Instead, this candidate function is not part of the viable function.
+
+     The other candidates will still be processed. (Choose which viable function is the best by ranking)
+
+     - Ranking rules: the less conversion, the better; add const is better than casting.
+       1. An exact match, including the following cases:
+          - identical types
+          - match through decay of array or function type
+          - match through **top-level** const conversion
+       2. Match through adding low-level const
+       3. Match through integral or floating-point promotion
+       4. Match through numeric conversion
+       5. Match through a class-type conversion
+
+- Lambda function: functors
+
+```c++
+auto lambda_func = [](auto para) {/*do something*/}
+```
+
+The type of `para` can (commonly) use `auto` to deduce since the lambda function is applied to different container, use `auto` can deduce the type of each element.

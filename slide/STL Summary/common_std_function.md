@@ -2,6 +2,12 @@
 
 
 
+### std::find; std::find_if
+
+**Use**: Not only can it find the correct the element, but also it can find the **correct / target position** (This is commonly used in many STL functions like `std::count`, `std::remove`)
+
+
+
 ### std::count, std::count_if
 
 `count( InputIt first, InputIt last, const T& value );`
@@ -48,6 +54,34 @@ vec.erase(std::next(vec.begin()));
 
 // Deletes the second through third elements (vec[1], vec[2])
 vec.erase(std::next(vec.begin(), 1), std::next(vec.begin(), 3));
+```
+
+**Implementation of `std::remove`**: in-place algorithm and double ptrs
+
+In-place: move the undeleted element forward to cover the target element
+
+Double ptrs: use `std::find` to find the **correct position**
+
+```c++
+// in-place algorithm: double pointers, start from where? + find correct postion (similar program: split stirng)
+// std::find can also help us find correct postion
+template<typename ForwardIt, typename T>
+ForwardIt myRemove(ForwardIt first, ForwardIt last, const T& val) {
+    auto curr = std::find(first, last, val);
+    if (curr != last) {
+        auto next = std::next(curr);
+        while (next != last) {
+            if (!(*next == val)) {
+                *curr = std::move(*next);
+                ++curr;
+                ++next;
+            } else {
+                ++next;
+            }
+        }
+    }
+    return curr;
+}
 ```
 
 
@@ -192,6 +226,30 @@ Referece:
 [Slicing a vector in C++](https://stackoverflow.com/questions/50549611/slicing-a-vector-in-c)
 
 [Copy Constructor of Vector](https://en.cppreference.com/w/cpp/container/vector/vector)
+
+
+
+### std::string::find; std::string::find
+
+`size_t find( const string& target_str, size_t start_pos = 0 ) const;`: Finds the first substring equal to the given character sequence. Search begins at pos, i.e. the found substring must not begin in a position preceding pos.
+
+
+
+`size_t find_first_not_of( const string& str, size_t pos = 0 ) const;`:
+
+Finds the first character equal to **none** of the characters in the given character sequence. The search considers only the range [`pos`, `size()`). If all characters in the range can be found in the given character sequence, [npos](https://en.cppreference.com/w/cpp/string/basic_string/npos) will be returned.
+
+
+
+`size_t find_first_of( const string& str, size_t pos = 0 ) const;`:
+
+Finds the first character equal to **one of** the characters in the given character sequence. The search considers only the range [`pos`,` size()`). If none of the characters in the given character sequence is present in the range, npos will be returned.
+
+Note: 
+
+1. `std::string::find_first_of` is not the same as `std::string::find`
+
+2. If find nothing, return `std::string::npos`
 
 
 
