@@ -514,6 +514,7 @@ std::vector<int>::iterator
 - **Iterator Class**: design an iterator for your own class 
 
   - Iterator tag: `begin` and `end` with const version
+  - Example: see assignment `GapBuffer`
   - Requirements and steps:
 
   ![image-20230726114653193](/Users/bryant/Programming/CS106L-master/CS106L_2019/slide/review_image/image-20230726114653193.png)
