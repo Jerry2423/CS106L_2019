@@ -88,9 +88,12 @@ typename GapBuffer::reference GapBuffer::get_at_cursor() {
 typename GapBuffer::reference GapBuffer::at(size_t pos) {
     // TODO: Part 1
 
-    (void) pos;
-    return _elems[0]; // only here so it will compile
+    return const_cast<reference>(static_cast<const GapBuffer *>(this) ->at(pos));
 }
+
+typename GapBuffer::const_reference GapBuffer::at(size_type pos) const {
+    return _elems[pos];
+} 
 
 typename GapBuffer::size_type GapBuffer::size() const {
     // TODO: Part 2

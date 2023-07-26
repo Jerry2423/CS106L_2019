@@ -12,7 +12,7 @@ Based on *C++ Primer* and *CS106L*
 
 **types basics** + **variable declaration** + **casting**
 
-![](/Users/bryant/Downloads/IMG_3EEA73F5A178-1.jpeg)
+![](/Users/bryant/Programming/CS106L-master/CS106L_2019/slide/review_image/IMG_3EEA73F5A178-1.png)
 
 
 
@@ -33,6 +33,41 @@ Based on *C++ Primer* and *CS106L*
 Implementation-defined behavior:
 
 > Similarly, programs usually should avoid implementation-deﬁned behavior, such as assuming that the size of an int is a ﬁxed and known value. Such programs are said to be nonportable. When the program is moved to another machine, code that relied on implementation-deﬁned behavior may fail. Tracking down these sorts of problems in previously working programs is, mildly put, unpleasant.
+
+- **The `decltype` Type Specifier**
+
+  - Use: 
+
+  > Sometimes we want to deﬁne a variable with a type that the compiler deduces **from an expression** but **do not want to use that expression** to initialize the variable. For such cases, the new standard introduced a second type speciﬁer, `decltype`, which returns the type of its operand.
+  >
+  > Note: When the expression to which we apply decltype is a variable, decltype returns the type of that variable, **including top-level const and references**
+
+  - Difference with `auto`: 
+    - **Key:** `decltype` does not evaluate the given expression and initialize the variable; `auto` initialize the variable with the value
+    - Top-level const and reference
+  - Examples:
+
+  ```c++
+  const int a = 10;
+  decltype(a) b = 100; // preserve the top-level const of a, which is const int
+  int k;
+  decltype(k = 10) c; // warning: Expression with side effects has no effect in an unevaluated context(i.e. the k = 10 expression is not evaluated)
+  ```
+
+  **Combine `decltype` with templates: use it to fill type parameters**
+
+  ```c++
+  std::vector<int> v {1, 2, 3, 4};
+  my_util::printContainer<decltype(v.begin()), decltype(v.front())>(cout, v.begin(), v.end());
+  
+  // priority_queue
+  auto cmp = [](const auto& v1, const auto& v2) {return v1.size() < v2.size();};
+  std::priority_queue<vector<int>, vector<vector<int>>, decltype(cmp)> q(cmp); // decltype(cmp) only give the type not the value of the expression to the type parameter, must use cmp to init the comparator
+  ```
+
+  
+
+  
 
 
 
@@ -71,21 +106,92 @@ Implementation-defined behavior:
   >
   > 3. A const_cast is most useful in the context of overloaded functions, which we’ll describe in § 6.4 (p. 232).
 
+  ​	Use of `const_cast` with `static_cast`:
+
+  ```c++
+  template<typename T>
+  typename MyVector<T>::const_reference MyVector<T>::at(sizt_type pos) const {
+  	return _ele[pos];
+  }
+  
+  template<typename T>
+  typename MyVector<T>::reference MyVector<T>::at(size_type pos) {
+      // add low-level const with static_cast then cast const away with const_cast
+  	return const_cast<reference>(static_cast<const MyVector<T>*>(this)->at(pos));
+  }
+  ```
+  
+  
+  
+  
+  
   - `reinterpret_cast`: dangerous, don't use!
-
+  
   > A reinterpret_cast generally performs a low-level reinterpretation of the bit pattern of its operands.
-
+  
   - `dynamic_cast`: run-time type conversion, used in polymorphism.
-
+  
     - Error handling
-
+  
     > If the cast fails and *target-type* is a **pointer type**, it returns a **null pointer** of that type. If the cast fails and *target-type* is a **reference type**, it **throws an exception** that matches a handler of type [std::bad_cast](https://en.cppreference.com/w/cpp/types/bad_cast).
 
 
 
 #### Variable Declaration
 
+- Declaration and Definition:
+
+  - Why declaration and definition are separated? To support separate compilation.
+
+  - A **declaration** makes a name known to the program. A ﬁle that wants to use <u>a name deﬁned elsewhere</u> **includes a declaration for that name.**
+
+  - A **deﬁnition** creates the associated entity.
+
+  - Any declaration that includes an **explicit initializer is a deﬁnition.**
+
+  - Variables must be **deﬁned exactly once** but can be **declared many times.**
+
+  - `extern` keyword: declare but not define a variable
+
+    - We can provide an initializer on a variable deﬁned as `extern`, but doing so overrides the extern. An extern that has an initializer is a deﬁnition:
+
+    ```c++
+    extern const double PI = 3.14; // can only be done outside an function
+    ```
+
+    - It is an error to provide an initializer on an extern inside a function.
+
+    ```c++
+    int main() {
+    	extern const double PI = 3.14; // error
+    	return 0;
+    }
+    ```
+
+    - Example: use `PI` in multiple files
+
+    Define `PI` in `my_util.h`
+
+    ```c++
+    extern const double PI = 3.14;
+    ```
+
+    Declare `PI` in `main.cpp`
+
+    ```c++
+    #include "my_util.h"
+    int main() {
+    	extern const double PI; // compiler go to extern files to find the symbol PI
+    	cout << PI << endl; // 3.14
+    }
+    ```
+
+    
+
 - Compound type: 
+  - Reference: an **alias** of an object
+  - Do not return **a reference binding to a local object**!
+
 
 > It can be easier to understand complicated pointer or reference declarations if you **read them from right to left.**
 
@@ -244,7 +350,39 @@ v.erase(std::remove_if(v.begin(), v.end(), pred), v.end()); // don't forget the 
   - Forward iterator
   - Bidirectional iterator
   - Random access iterator
-- Declaration of iterator:
+- **Const correctness about iterator**: `iterator` and `const_iterator`
+  
+  - Def: `iterator` can both read and write the element it denotes; `const_iterator ` can only read the element it denotes
+  - Understanding the naming rule of `const_iterator`,  `const_reference` and `const_ptr`: the `const` key word should be seen as a *qualifier* (i.e. low-level const), which is similar to:
+  
+  ```c++
+  const type* ptr_c;
+  const type& ref_c;
+  ```
+  
+  - `begin` and `end` operation: construct iterator and return it
+    - For const container: the return value of `begin` and `end` is `const_iterator`
+    - `begin` and `end` can be an **iterator tag** for a class and therefore can be applied to stl functions by calling its iterator (see more in *iterator class*)
+  - `cbegin` and `cend` in *C++11*: when we only want to read element in a non-const container, we should use `const_iterator` by explicitly calling `cbegin` and `cend`
+- Terminology: **Iterator** and **Iterator Types**
+
+> The term iterator is used to refer to **three different entities**. We might mean the **concept** of an iterator, or we might refer to the **iterator type deﬁned by a container**, or we might refer to an **object** as an iterator.
+>
+> What’s important to understand is that there is a collection of types that are related conceptually. **A type is an iterator if it supports a common set of actions**. Those actions let us access an element in a container and let us move from one element to another.
+>
+> Each container class deﬁnes a type named iterator; that iterator type supports the actions of an (conceptual) iterator.
+>
+> Types satisfying specific operations can be a iterator type, by initing the iterator type, we get an iterator object:
+
+```mermaid
+graph LR;
+	Types-->Iterator_Types-->Iterator_Object
+
+```
+
+
+
+- Declaration of iterator: often use `auto`
 
 ```c++
 std::vector<int>::iterator
@@ -275,7 +413,7 @@ std::vector<int>::iterator
     - `std::list / map / set`: all **other** iterators are still valid
   - More information: check out cppreference:
 
-  ![](/Users/bryant/Desktop/Screen Shot 2023-07-17 at 16.19.41.png)
+  ![](/Users/bryant/Programming/CS106L-master/CS106L_2019/slide/review_image/Screen Shot 2023-07-17 at 16.19.41.png)
 
   - **Writing Loops That Change a Container**
 
@@ -373,7 +511,22 @@ std::vector<int>::iterator
     std::fill_n(std::back_inserter(v), 3, -1); // add three -1s to the back of v
     ```
 
+- **Iterator Class**: design an iterator for your own class 
 
+  - Iterator tag: `begin` and `end` with const version
+  - Requirements and steps:
+
+  ![image-20230726114653193](/Users/bryant/Programming/CS106L-master/CS106L_2019/slide/review_image/image-20230726114653193.png)
+
+![image-20230726114713943](/Users/bryant/Programming/CS106L-master/CS106L_2019/slide/review_image/image-20230726114713943.png)
+
+
+
+![image-20230726114956502](/Users/bryant/Programming/CS106L-master/CS106L_2019/slide/review_image/image-20230726114956502.png)
+
+
+
+![Screen Shot 2023-07-26 at 11.54.03](/Users/bryant/Programming/CS106L-master/CS106L_2019/slide/review_image/Screen Shot 2023-07-26 at 11.54.03.png)
 
 #### Template Functions
 
@@ -389,7 +542,7 @@ std::vector<int>::iterator
 
   - Step:
 
-  ![image-20230717171303934](/Users/bryant/Library/Application Support/typora-user-images/image-20230717171303934.png)
+  ![image-20230717171303934](/Users/bryant/Programming/CS106L-master/CS106L_2019/slide/review_image/image-20230717171303934.png)
 
   1. Look up all functions that matches **name** of function call. If template found, **deduce** the type. (Candidate functions found)
 
@@ -446,3 +599,161 @@ auto lambda_func = [](auto para) {/*do something*/}
 ```
 
 The type of `para` can (commonly) use `auto` to deduce since the lambda function is applied to different container, use `auto` can deduce the type of each element.
+
+
+
+
+
+### Class Design
+
+#### Basic Concepts
+
+- Interface
+- Implementation
+- Public members
+- Private members
+- PIMPL: [Why would one use nested classes in C++?](https://stackoverflow.com/questions/4571355/why-would-one-use-nested-classes-in-c)
+
+
+
+### Operators
+
+- **POLA**: Principle of Least Astonishment 
+  - Const correctness: parameters, const member function, return value: ref or const ref
+  - Ref: return value
+  - Friend?
+- Conversion operator: similar to casting `type(var)`
+
+```c++
+// add explicit to avoid implicit casting
+explicit operator target_type() {
+	/*...*/
+	return target_type_value
+}
+```
+
+### Rule of Three or Five
+
+- Copy constructor and assignment:
+
+  - Copy elision and RVO:
+
+  ```c++
+  vector<string> foo() {
+  	vector<string> v {"a", "bcd"};
+  	return v;
+  }
+  ```
+
+  > Compiler: “I know this vector is going to be returned, so I’ll just **create it in main’s space**.
+
+  [What are copy elision and return value optimization?](https://stackoverflow.com/questions/12953127/what-are-copy-elision-and-return-value-optimization)
+
+  [Wikipedia](http://en.wikipedia.org/wiki/Return_value_optimization)
+
+  - Trick: copy and swap: [What is the copy-and-swap idiom?](https://stackoverflow.com/questions/3279543/what-is-the-copy-and-swap-idiom)
+  - Copy assignment:
+    - Self-assignment safe
+    - Clean up then invite guests
+
+- Move semantics:
+
+  - Outline:
+    - How do we distinguish between when we CAN and CANNOT move? (L-value and r-value)
+    - How do we actually move? (implementation: *Steal*)
+    - Can we force a move to occur? (`std::move`)
+    - How do we apply move? (Application examples: swap and insert)
+    - Can we apply this to templates? (perfect forwarding: [What are the main purposes of std::forward and which problems does it solve?](https://stackoverflow.com/questions/3582001/what-are-the-main-purposes-of-stdforward-and-which-problems-does-it-solve))
+
+  - L-value and r-value:
+
+    - Diff: how to see <u>the left and right side</u> of assignment operator `=`
+      1. All variables / (stuff can be put on the left side of `=`) are l-value
+      2. Stuff on the right side of `=` can be r-value or l-value
+      3. Return value type: return value is r-value; return ref (Alisas of an variable) is l-value 
+      4. Life span: motivation for *move semantics*
+         1. An l-value’s lifetime is decided by scope.
+         2. An r-value’s lifetime **ends on the very next line** (unless you purposely extend it!)
+      5. Caveat: **An r-value ref binds to an r-value, but itself is an l-value!** Since r-value ref is an var and it's on the left side of `=`
+
+  - Advice on move operations:
+
+    - Steps:
+
+    ![image-20230726122707263](/Users/bryant/Programming/CS106L-master/CS106L_2019/slide/review_image/image-20230726122707263.png)
+
+    - About `std::move`:
+      1. When declaring move operations, make sure to std::move **all** members.
+      2. Don't be too quick to move: 
+         1. Outside of class implementation code such as move constructors or moveassignment operators, use `std::move` only when you are certain that you need to do a move and that the move is guaranteed to be safe.
+         2. Make sure you don't have to reuse the move-from object
+      3. Do not use `std::move` and r-value reference for return values: 
+         1. affect the optimization from compilers if we use `std::move`
+         2. returning a r-value ref leads to run-time error since r-value ref is an alias of an object that is about to be destroyed. [C++11 rvalues and move semantics confusion (return statement)](https://stackoverflow.com/questions/4986673/c11-rvalues-and-move-semantics-confusion-return-statement)
+
+- Rule of zero: It's useful to think whether you need to define a destructor to determine which rule(five or zero) should you use.
+
+  - Side note: use of destructor
+    - Pure virtual destructor: tag for a abstract class
+    - Determine which rule (five or zero) to use
+
+#### Template Class
+
+- [Why can templates only be implemented in the header file?](https://stackoverflow.com/questions/495021/why-can-templates-only-be-implemented-in-the-header-file)
+- Dependent qualified names
+
+![image-20230726131752042](/Users/bryant/Programming/CS106L-master/CS106L_2019/slide/review_image/image-20230726131752042.png)
+
+
+
+![image-20230726131812069](/Users/bryant/Programming/CS106L-master/CS106L_2019/slide/review_image/image-20230726131812069.png)
+
+
+
+
+
+### RAII
+
+#### Definition
+
+1. SBRM: Scope Based Resources Management
+
+   When an object is out of scope, it destructs its resources automatically.
+
+2. CADRE: Constructor Acquires, Destructor Releases
+
+3. What are *resources*? Example: heap memory, file, lock, socket, etc. 
+
+4. [What is meant by Resource Acquisition is Initialization (RAII)?](https://stackoverflow.com/questions/2321511/what-is-meant-by-resource-acquisition-is-initialization-raii)
+
+#### Implementation: Use *Wrapper Class*
+
+- **Encapsulate a resource into a class** (whose constructor usually - but not necessarily** - acquires the resource, and its destructor always releases it)
+- Use the resource via a local instance by calling constructor of the class*
+- The resource is automatically freed when the object gets out of scope by calling destructor
+- Examples:
+
+```c++
+ifstream raii_data("file_name"); // correct: aquire resources when calling constructor
+// non-raii way: Not getting resources upon instantiation, which might lead to bugs!
+ifstream data;
+data.open("file_name");
+/*...*/
+data.close();
+```
+
+#### RAII for Memory Management: *Smart Pointer*
+
+
+
+
+
+### What's Next
+
+- Hash map assignment
+- Binary tree iterator
+- Template meta programming
+- Perfect forwarding 
+- C++ primer reading
+- C++ weekly
+

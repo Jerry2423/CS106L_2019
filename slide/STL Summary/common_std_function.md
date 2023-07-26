@@ -8,6 +8,10 @@
 
 
 
+### std::search
+
+Difference with `std::find`: use `std::search` when looking for **several elements in a row** in a container, and use `std::find` when looking for a **single element** in a container
+
 ### std::count, std::count_if
 
 `count( InputIt first, InputIt last, const T& value );`
@@ -137,6 +141,12 @@ Examples:
 
 Note:
 Knowing v2.begin() is enough since v1, v2 are the same length and by knowing the begin and end of v1, and begin of v2, we know end of v2 = v2.begin() + (v1.end() - v1.begin())
+
+
+
+### std::all_of
+
+>  Checks if unary predicate `p` returns true for all elements in the range [`first`, `last`).
 
 
 

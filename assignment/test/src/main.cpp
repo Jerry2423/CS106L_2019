@@ -1,14 +1,37 @@
+#include <ios>
 #include <iostream>
+#include <queue>
 #include <algorithm>
 #include <iterator>
+#include <set>
 #include <unordered_set>
 #include <stdexcept>
 #include <unordered_map>
+#include <vector>
 #include "my_util.h"
 
 using std::cout;            using std::endl;
 using std::cerr;            using std::string;
 using std::unordered_map;   using std::unordered_set;
+
+class Fraction {
+    public:
+        explicit operator double() const {return static_cast<double>(num) / denom;}
+        operator bool() const {return num < denom;}
+        Fraction(int num, int denom) : num(num), denom(denom) {}
+        Fraction(Fraction&& other) : num(std::move(other.num)), denom(std::move(other.denom)) {}
+        Fraction& operator++() {num += denom; return *this;}
+        Fraction operator++(int) {Fraction copy(num, denom); num += denom; return copy;}
+    private:
+        int num;
+        int denom;
+        friend ostream& operator<<(ostream& os, const Fraction &fra);
+};
+
+ostream& operator<<(ostream& os, const Fraction &fra) {
+    os << fra.num << "/" << fra.denom;
+    return os;
+}
 
 /*
  * You should delete the code in this function and
@@ -101,6 +124,11 @@ unordered_set<string> findWikiLinks(const string& inp) {
     return ret;
 
 }
+
+bool tryDecltype() {
+    return false;
+}
+
 int main() {
     string s = "<p>\n"
 "  In <a href=\"/wiki/Topology\">topology</a>, the <b>long line</b> (or <b>Alexandroff line</b>) is a\n"
@@ -112,6 +140,67 @@ int main() {
 "  </p>\n"
 "               ";
     auto result = findWikiLinks(s);
-    std::copy(result.begin(), result.end(), std::ostream_iterator<string>(cout, " "));
+    my_util::printContainer<std::unordered_set<string>::iterator, string>(cout, result.begin(), result.end());
+    
+    cout << my_util::containVal(result.begin(), result.end(), "Topological_space") << endl;
+
+    string foo = "abcdefgabc";
+    string target = "abc";
+    vector<int>  vec {1, 2, 3, 4, 5, 6};
+    vector<int> goal {3, 4, 5};
+    cout << std::boolalpha << (vec.end() != std::search(vec.begin(), vec.end(), goal.begin(), goal.end())) << endl;
+    // decltype(tryDecltype()) fun;
+    // int limit = 10;
+    // auto cmp = [&limit](int a) {return a < limit;};
+    // decltype(cmp) fun(cmp);
+    auto cmp = [](const auto& v1, const auto& v2) {return v1.size() > v2.size();};
+    vector<int> v {1, 2}, v1{3, 4, 5}, v2 {6, 7, 8, 9};
+    std::priority_queue<vector<int>, vector<vector<int>>, decltype(cmp)> q(cmp);
+    q.push(v);
+    q.push(v1);
+    q.push(v2);
+    my_util::printContainer<decltype(v.begin()), decltype(v.front())>(cout, v.begin(), v.end());
+    while (!q.empty()) {
+
+        
+        std::copy(q.top().begin(), q.top().end(), std::ostream_iterator<int>(cout, " "));
+        cout << endl;
+        q.pop();
+    }
+
+    int kdj = 10;
+    const int d = 10;
+    const int &f = d;
+    int k;
+    decltype(k = 100) i = kdj;
+    decltype(f) h = 10;
+    decltype(d) e = 5;
+
+    extern const double PI;
+    cout << PI << endl;
+    
+    int *const cptr = &kdj;
+    *cptr = 10;
+
+    vector<string> s_v {"1234", "234", "122343223", "fun"};
+    for (auto i = s_v.cbegin(); i != s_v.cend(); ++i) {
+        if (i->size() > 3) {
+            cout << *i << endl;
+        }
+    }
+    vector<string>::const_iterator ii = s_v.begin();
+    ++ii;
+
+    Fraction fra(3, 4);
+    if (fra) {
+        cout << "true fraction " << fra << "'s value is " << static_cast<double>(fra) << endl;
+    }
+
+    
+    int a1 = 1, b1 = 2, c1 = 3;
+    // a1 = (b1 = a1) = b1;
+    a1 = b1 = c1;
+    cout << a1 << endl;
+    cout << b1 << endl;
     return 0;
 }
